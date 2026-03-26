@@ -20,6 +20,8 @@ add_library(win-pcbiounlock SHARED
         src/CUnlockCredential.cpp
         src/CUnlockListener.h
         src/CUnlockListener.cpp
+        src/CUnlockServiceClient.h
+        src/CUnlockServiceClient.cpp
 )
 target_include_directories(win-pcbiounlock PUBLIC common-cpp/src)
 target_link_libraries(win-pcbiounlock PUBLIC Credui Shlwapi Secur32 pcbu_common)

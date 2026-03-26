@@ -8,6 +8,10 @@
 
 class CSampleProvider;
 class CUnlockCredential;
+
+// NEW
+class CUnlockServiceClient;
+
 class CUnlockListener {
 public:
   CUnlockListener() = default;
@@ -22,6 +26,8 @@ public:
 
 private:
   void ListenThread();
+  bool TryServiceFlow(const std::string &userDomainStr);
+  void RunDirectUnlockFlow(const std::string &userDomainStr);
 
   std::thread m_ListenThread{};
   std::atomic<bool> m_IsRunning{};

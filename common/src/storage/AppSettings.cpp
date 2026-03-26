@@ -58,6 +58,26 @@ PCBUAppStorage AppSettings::Load() {
     settings.clientConnectTimeout = json["clientConnectTimeout"];
     settings.clientConnectRetries = json["clientConnectRetries"];
 
+    // NEW
+    try {
+      settings.winServiceLoopbackPort = json["winServiceLoopbackPort"];
+    } catch(...) {
+      settings.winServiceLoopbackPort = 43297;
+      save = true;
+    }
+    try {
+      settings.winServicePipeName = json["winServicePipeName"];
+    } catch(...) {
+      settings.winServicePipeName = R"(\\.\pipe\pcbu-unlock-service)";
+      save = true;
+    }
+    try {
+      settings.winServiceEnableLoopbackApi = json["winServiceEnableLoopbackApi"];
+    } catch(...) {
+      settings.winServiceEnableLoopbackApi = false;
+      save = true;
+    }
+
     settings.winWaitForKeyPress = json["winWaitForKeyPress"];
     settings.winHidePasswordField = json["winHidePasswordField"];
     settings.unixSetPasswordPAM = json["unixSetPasswordPAM"];
@@ -78,6 +98,11 @@ PCBUAppStorage AppSettings::Load() {
     def.clientSocketTimeout = 120;
     def.clientConnectTimeout = 5;
     def.clientConnectRetries = 2;
+
+    // NEW
+    def.winServiceLoopbackPort = 43297;
+    def.winServicePipeName = R"(\\.\pipe\pcbu-unlock-service)";
+    def.winServiceEnableLoopbackApi = false;
 
     def.winWaitForKeyPress = true;
     def.winHidePasswordField = false;
@@ -103,6 +128,11 @@ void AppSettings::Save(const PCBUAppStorage &storage) {
         {"clientSocketTimeout", storage.clientSocketTimeout},
         {"clientConnectTimeout", storage.clientConnectTimeout},
         {"clientConnectRetries", storage.clientConnectRetries},
+
+        // NEW
+        {"winServiceLoopbackPort", storage.winServiceLoopbackPort},
+        {"winServicePipeName", storage.winServicePipeName},
+        {"winServiceEnableLoopbackApi", storage.winServiceEnableLoopbackApi},
 
         {"winWaitForKeyPress", storage.winWaitForKeyPress},
         {"winHidePasswordField", storage.winHidePasswordField},

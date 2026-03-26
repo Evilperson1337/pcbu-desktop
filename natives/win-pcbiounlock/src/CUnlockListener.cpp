@@ -1,6 +1,7 @@
 #include "CUnlockListener.h"
 
 #include "CSampleProvider.h"
+#include "CUnlockServiceClient.h"
 #include "handler/UnlockHandler.h"
 #include "platform/NetworkHelper.h"
 #include "storage/AppSettings.h"
@@ -103,6 +104,52 @@ void CUnlockListener::ListenThread() {
   }
 
   // Unlock
+  if(!TryServiceFlow(userDomainStr)) {
+    RunDirectUnlockFlow(userDomainStr);
+  }
+}
+
+// NEW
+bool CUnlockListener::TryServiceFlow(const std::string &userDomainStr) {
+  auto serviceClient = CUnlockServiceClient();
+  if(!serviceClient.Ping()) {
+    return false;
+  }
+
+  m_Credential->UpdateMessage("Waiting for unlock service...");
+  auto requestId = serviceClient.CreateUnlockRequest(m_UserDomain, 1);
+  if(!requestId.has_value()) {
+    return false;
+  }
+
+  constexpr auto maxPollCount = 8;
+  for(int i = 0; i < maxPollCount && m_IsRunning; i++) {
+    auto status = serviceClient.GetRequestStatus(requestId.value());
+    if(!status.has_value()) {
+      return false;
+    }
+
+    if(status->starts_with("APPROVED") || status->starts_with("SUCCESS")) {
+      m_HasResponse = true;
+      m_Credential->SetServiceRequestId(requestId.value());
+      m_Credential->SetUnlockData(UnlockResult(UnlockState::SUCCESS));
+      m_CredentialProvider->UpdateCredsStatus();
+      return true;
+    }
+
+    if(!status->starts_with("PENDING")) {
+      return false;
+    }
+
+    m_Credential->UpdateMessage("Unlock request staged in service. Falling back to direct unlock if not completed...");
+    Sleep(250);
+  }
+
+  return false;
+}
+
+// NEW
+void CUnlockListener::RunDirectUnlockFlow(const std::string &userDomainStr) {
   std::function<void(const std::string&)> printMessage = [this](const std::string &s) { m_Credential->UpdateMessage(s); };
   auto handler = UnlockHandler(printMessage);
   const auto result = handler.GetResult(userDomainStr, "Windows-Login", &m_IsRunning);

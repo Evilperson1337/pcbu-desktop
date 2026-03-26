@@ -19,6 +19,11 @@ struct PCBUAppStorage {
   uint32_t clientConnectTimeout{};
   uint32_t clientConnectRetries{};
 
+  // NEW
+  uint16_t winServiceLoopbackPort{};
+  std::string winServicePipeName{};
+  bool winServiceEnableLoopbackApi{};
+
   bool winWaitForKeyPress{};
   bool winHidePasswordField{};
   bool unixSetPasswordPAM{};

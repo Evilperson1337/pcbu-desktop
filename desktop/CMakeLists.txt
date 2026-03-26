@@ -160,6 +160,24 @@ target_link_libraries(pcbu_desktop PRIVATE
         pcbu_common
 )
 
+if(WIN32)
+    # NEW
+    add_executable(pcbu_unlock_service
+            service/src/main.cpp
+            service/src/UnlockServiceApp.h
+            service/src/UnlockServiceApp.cpp
+            service/src/UnlockRequestManager.h
+            service/src/UnlockRequestManager.cpp
+    )
+    target_link_libraries(pcbu_unlock_service PRIVATE pcbu_common)
+
+    # NEW
+    add_executable(pcbu_unlockctl
+            tools/unlockctl/src/main.cpp
+    )
+    target_link_libraries(pcbu_unlockctl PRIVATE pcbu_common)
+endif()
+
 set_target_properties(pcbu_desktop PROPERTIES
         WIN32_EXECUTABLE TRUE
         MACOSX_BUNDLE TRUE

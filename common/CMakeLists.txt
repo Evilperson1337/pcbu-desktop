@@ -30,6 +30,10 @@ if(WIN32)
             src/platform/BluetoothHelper.Win.cpp
             src/utils/RegistryUtils.cpp
             src/utils/RegistryUtils.h
+            src/ipc/NamedPipeClient.Win.cpp
+            src/ipc/NamedPipeClient.Win.h
+            src/ipc/NamedPipeServer.Win.cpp
+            src/ipc/NamedPipeServer.Win.h
     )
 elseif(APPLE)
     add_compile_definitions(APPLE)
@@ -100,6 +104,8 @@ add_library(pcbu_common
         src/storage/PairedDevicesStorage.cpp
         src/storage/PairedDevicesStorage.h
         src/storage/PairingMethod.h
+        src/ipc/UnlockIpcProtocol.cpp
+        src/ipc/UnlockIpcProtocol.h
         src/utils/CryptUtils.cpp
         src/utils/CryptUtils.h
         src/utils/StringUtils.cpp

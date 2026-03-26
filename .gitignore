@@ -9,3 +9,7 @@ pkg/build
 common/src/generated
 desktop/res/natives
 compile_commands.json
+
+# 
+.docs/
+build/

@@ -98,6 +98,7 @@ public:
   bool IsSelected() const;
   void SetUnlockData(const UnlockResult &result);
   void UpdateMessage(const std::string &message);
+  void SetServiceRequestId(const std::string &requestId);
 
 public:
   virtual ~CUnlockCredential();
@@ -119,4 +120,5 @@ public:
   CUnlockListener *_pUnlockListener{};
   UnlockResult _unlockResult{};
   bool _isSelected{};
+  std::string _serviceRequestId{};
 };

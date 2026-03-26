@@ -11,6 +11,7 @@
 #include "CUnlockCredential.h"
 
 #include "CSampleProvider.h"
+#include "CUnlockServiceClient.h"
 #include "guid.h"
 #include "storage/AppSettings.h"
 #include "utils/StringUtils.h"
@@ -115,6 +116,11 @@ void CUnlockCredential::UpdateMessage(const std::string &message) {
   SHStrDupW(StringUtils::ToWideString(message).c_str(), &_rgFieldStrings[SFI_MESSAGE]);
   if(_pCredProvCredentialEvents)
     _pCredProvCredentialEvents->SetFieldString(this, SFI_MESSAGE, _rgFieldStrings[SFI_MESSAGE]);
+}
+
+// NEW
+void CUnlockCredential::SetServiceRequestId(const std::string &requestId) {
+  _serviceRequestId = requestId;
 }
 
 // LogonUI calls this in order to give us a callback in case we need to notify it of anything.
@@ -361,6 +367,13 @@ HRESULT CUnlockCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
   // Check for password or unlock success
   std::wstring pwd;
   if(_unlockResult.state == UnlockState::SUCCESS) {
+    if(!_serviceRequestId.empty() && _unlockResult.password.empty()) {
+      auto serviceClient = CUnlockServiceClient();
+      auto servicePassword = serviceClient.ConsumeApprovedPassword(_serviceRequestId);
+      if(servicePassword.has_value()) {
+        _unlockResult.password = servicePassword.value();
+      }
+    }
     pwd = StringUtils::ToWideString(_unlockResult.password);
   } else if(_rgFieldStrings[SFI_PASSWORD] && lstrlenW(_rgFieldStrings[SFI_PASSWORD]) >= 1) {
     pwd = std::wstring(_rgFieldStrings[SFI_PASSWORD]);
