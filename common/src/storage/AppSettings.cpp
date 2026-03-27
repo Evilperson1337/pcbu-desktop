@@ -77,6 +77,12 @@ PCBUAppStorage AppSettings::Load() {
       settings.winServiceEnableLoopbackApi = false;
       save = true;
     }
+    try {
+      settings.winServiceLoopbackApiToken = json["winServiceLoopbackApiToken"];
+    } catch(...) {
+      settings.winServiceLoopbackApiToken = StringUtils::RandomString(48);
+      save = true;
+    }
 
     settings.winWaitForKeyPress = json["winWaitForKeyPress"];
     settings.winHidePasswordField = json["winHidePasswordField"];
@@ -103,6 +109,7 @@ PCBUAppStorage AppSettings::Load() {
     def.winServiceLoopbackPort = 43297;
     def.winServicePipeName = R"(\\.\pipe\pcbu-unlock-service)";
     def.winServiceEnableLoopbackApi = false;
+    def.winServiceLoopbackApiToken = StringUtils::RandomString(48);
 
     def.winWaitForKeyPress = true;
     def.winHidePasswordField = false;
@@ -133,6 +140,7 @@ void AppSettings::Save(const PCBUAppStorage &storage) {
         {"winServiceLoopbackPort", storage.winServiceLoopbackPort},
         {"winServicePipeName", storage.winServicePipeName},
         {"winServiceEnableLoopbackApi", storage.winServiceEnableLoopbackApi},
+        {"winServiceLoopbackApiToken", storage.winServiceLoopbackApiToken},
 
         {"winWaitForKeyPress", storage.winWaitForKeyPress},
         {"winHidePasswordField", storage.winHidePasswordField},

@@ -27,7 +27,7 @@ bool CUnlockServiceClient::Ping() const {
 }
 
 // NEW
-std::optional<std::string> CUnlockServiceClient::CreateUnlockRequest(const std::wstring &qualifiedUserName, unsigned long sessionId) const {
+std::optional<UnlockServiceRequestHandle> CUnlockServiceClient::CreateUnlockRequest(const std::wstring &qualifiedUserName, unsigned long sessionId) const {
   auto request = UnlockIpcRequest();
   request.command = UnlockIpcCommand::CREATE_UNLOCK_REQUEST;
   request.payload = {{"targetUser", StringUtils::FromWideString(qualifiedUserName)}, {"targetSessionId", sessionId}};
@@ -37,9 +37,10 @@ std::optional<std::string> CUnlockServiceClient::CreateUnlockRequest(const std::
   if(response->result != UnlockIpcResult::PENDING && response->result != UnlockIpcResult::OK)
     return {};
   auto requestId = response->payload.value("requestId", std::string());
-  if(requestId.empty())
+  auto consumeToken = response->payload.value("consumeToken", std::string());
+  if(requestId.empty() || consumeToken.empty())
     return {};
-  return requestId;
+  return UnlockServiceRequestHandle{.requestId = requestId, .consumeToken = consumeToken};
 }
 
 // NEW
@@ -57,10 +58,10 @@ std::optional<std::string> CUnlockServiceClient::GetRequestStatus(const std::str
 }
 
 // NEW
-std::optional<std::string> CUnlockServiceClient::ConsumeApprovedPassword(const std::string &requestId) const {
+std::optional<std::string> CUnlockServiceClient::ConsumeApprovedPassword(const std::string &requestId, const std::string &consumeToken) const {
   auto request = UnlockIpcRequest();
   request.command = UnlockIpcCommand::CONSUME_UNLOCK_REQUEST;
-  request.payload = {{"requestId", requestId}};
+  request.payload = {{"requestId", requestId}, {"consumeToken", consumeToken}};
   auto response = Send(request);
   if(!response.has_value() || response->result != UnlockIpcResult::OK)
     return {};

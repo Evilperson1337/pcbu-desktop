@@ -26,7 +26,7 @@ public:
 
 private:
   void ListenThread();
-  bool TryServiceFlow(const std::string &userDomainStr);
+  bool TryServiceFlow();
   void RunDirectUnlockFlow(const std::string &userDomainStr);
 
   std::thread m_ListenThread{};

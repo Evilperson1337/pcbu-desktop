@@ -23,6 +23,7 @@ struct PCBUAppStorage {
   uint16_t winServiceLoopbackPort{};
   std::string winServicePipeName{};
   bool winServiceEnableLoopbackApi{};
+  std::string winServiceLoopbackApiToken{};
 
   bool winWaitForKeyPress{};
   bool winHidePasswordField{};

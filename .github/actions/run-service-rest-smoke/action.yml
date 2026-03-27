@@ -1,0 +1,24 @@
+name: Run Service/REST Smoke Test
+description: Runs the Windows service unlock smoke test script.
+
+inputs:
+  service-exe:
+    description: Path to the service executable.
+    required: true
+  unlockctl-exe:
+    description: Path to the unlockctl executable.
+    required: true
+  mode:
+    description: Smoke test mode: pipe or rest.
+    required: true
+  api-token:
+    description: API token for REST mode.
+    required: false
+    default: ci-loopback-token
+
+runs:
+  using: composite
+  steps:
+    - shell: pwsh
+      run: |
+        & .\pkg\win\smoke-test-service-rest.ps1 -ServiceExe "${{ inputs.service-exe }}" -UnlockCtlExe "${{ inputs.unlockctl-exe }}" -Mode "${{ inputs.mode }}" -ApiToken "${{ inputs.api-token }}"

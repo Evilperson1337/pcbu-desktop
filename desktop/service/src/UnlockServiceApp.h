@@ -6,6 +6,7 @@
 #include <string>
 
 #include "ipc/NamedPipeServer.Win.h"
+#include "LoopbackRestServer.h"
 #include "UnlockRequestManager.h"
 
 // NEW
@@ -19,6 +20,7 @@ private:
   std::string HandleRequest(const std::string &requestBody);
 
   NamedPipeServer m_PipeServer{};
+  LoopbackRestServer m_LoopbackRestServer{};
   UnlockRequestManager m_RequestManager{};
 };
 

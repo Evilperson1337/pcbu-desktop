@@ -1,0 +1,28 @@
+name: Verify Zip Contents
+description: Expands an archive and validates required files exist.
+
+inputs:
+  zip:
+    description: Path to the zip file.
+    required: true
+  destination:
+    description: Extraction destination.
+    required: true
+  required-files:
+    description: Newline-separated list of required files.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: pwsh
+      run: |
+        $files = @()
+        foreach ($line in @"
+${{ inputs.required-files }}
+"@ -split "`r?`n") {
+          if (![string]::IsNullOrWhiteSpace($line)) {
+            $files += $line.Trim()
+          }
+        }
+        & .\pkg\win\verify-zip-contents.ps1 -Zip "${{ inputs.zip }}" -Destination "${{ inputs.destination }}" -RequiredFiles $files

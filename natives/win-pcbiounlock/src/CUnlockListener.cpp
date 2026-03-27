@@ -7,6 +7,8 @@
 #include "storage/AppSettings.h"
 #include "utils/StringUtils.h"
 
+#include <WtsApi32.h>
+
 void CUnlockListener::Initialize(CREDENTIAL_PROVIDER_USAGE_SCENARIO cpus, CSampleProvider *pCredentialProvider, CUnlockCredential *pCredential,
                                  const std::wstring &userDomain) {
   m_ProviderUsage = cpus;
@@ -104,44 +106,56 @@ void CUnlockListener::ListenThread() {
   }
 
   // Unlock
-  if(!TryServiceFlow(userDomainStr)) {
+  if(!TryServiceFlow()) {
     RunDirectUnlockFlow(userDomainStr);
   }
 }
 
 // NEW
-bool CUnlockListener::TryServiceFlow(const std::string &userDomainStr) {
+bool CUnlockListener::TryServiceFlow() {
   auto serviceClient = CUnlockServiceClient();
   if(!serviceClient.Ping()) {
     return false;
   }
 
-  m_Credential->UpdateMessage("Waiting for unlock service...");
-  auto requestId = serviceClient.CreateUnlockRequest(m_UserDomain, 1);
-  if(!requestId.has_value()) {
+  auto sessionId = WTSGetActiveConsoleSessionId();
+  if(sessionId == 0xFFFFFFFF) {
     return false;
   }
 
-  constexpr auto maxPollCount = 8;
+  m_Credential->UpdateMessage("Waiting for unlock service...");
+  auto requestHandle = serviceClient.CreateUnlockRequest(m_UserDomain, sessionId);
+  if(!requestHandle.has_value()) {
+    return false;
+  }
+
+  constexpr auto maxPollCount = 40;
   for(int i = 0; i < maxPollCount && m_IsRunning; i++) {
-    auto status = serviceClient.GetRequestStatus(requestId.value());
+    auto status = serviceClient.GetRequestStatus(requestHandle->requestId);
     if(!status.has_value()) {
       return false;
     }
 
     if(status->starts_with("APPROVED") || status->starts_with("SUCCESS")) {
       m_HasResponse = true;
-      m_Credential->SetServiceRequestId(requestId.value());
+      m_Credential->SetServiceRequestId(requestHandle->requestId);
+      m_Credential->SetServiceConsumeToken(requestHandle->consumeToken);
       m_Credential->SetUnlockData(UnlockResult(UnlockState::SUCCESS));
       m_CredentialProvider->UpdateCredsStatus();
       return true;
     }
 
-    if(!status->starts_with("PENDING")) {
+    if(status->starts_with("FAILED") || status->starts_with("CONSUMED")) {
       return false;
     }
 
-    m_Credential->UpdateMessage("Unlock request staged in service. Falling back to direct unlock if not completed...");
+    if(status->starts_with("PROCESSING:")) {
+      m_Credential->UpdateMessage(status->substr(std::string("PROCESSING:").size()));
+    } else if(status->starts_with("PROCESSING")) {
+      m_Credential->UpdateMessage("Unlock request is being processed by the service...");
+    } else {
+      m_Credential->UpdateMessage("Unlock request staged in service. Waiting for approval...");
+    }
     Sleep(250);
   }
 

@@ -1,4 +1,4 @@
-name: CMake
+name: Build All
 on:
   workflow_dispatch:
   push:
@@ -43,11 +43,20 @@ jobs:
         env:
           VCPKG_ROOT: ${{github.workspace}}/vcpkg
 
+      - name: Build service/rest x64 bundle
+        run: bash -c "cd pkg && chmod +x build-service-rest.sh && ARCH=x64 QT_BASE_DIR=C:/Qt/${{env.QT_VERSION}} ./build-service-rest.sh"
+        env:
+          VCPKG_ROOT: ${{github.workspace}}/vcpkg
+
       - name: Upload x64
         uses: softprops/action-gh-release@v2
         with:
           files: |
             pkg/build/PCBioUnlock-Setup-x64.exe
+            pkg/build-service-rest/PCBioUnlock-ServiceRest-x64.zip
+            pkg/build-service-rest/PCBioUnlock-ServiceUnlock-x64.zip
+            pkg/build-service-rest/PCBioUnlock-RestUnlock-x64.zip
+            pkg/build-service-rest/PCBioUnlock-PCBioUnlock-x64.zip
 
   build-windows-arm64:
     runs-on: windows-11-arm
@@ -111,11 +120,20 @@ jobs:
         env:
           VCPKG_ROOT: ${{github.workspace}}/vcpkg
 
+      - name: Build service/rest arm64 bundle
+        run: bash -c "cd pkg && chmod +x build-service-rest.sh && rm -Rf ./build-service-rest/ && ARCH=arm64 QT_BASE_DIR=C:/Qt/${{env.QT_VERSION}} ./build-service-rest.sh"
+        env:
+          VCPKG_ROOT: ${{github.workspace}}/vcpkg
+
       - name: Upload arm64
         uses: softprops/action-gh-release@v2
         with:
           files: |
             pkg/build/PCBioUnlock-Setup-arm64.exe
+            pkg/build-service-rest/PCBioUnlock-ServiceRest-arm64.zip
+            pkg/build-service-rest/PCBioUnlock-ServiceUnlock-arm64.zip
+            pkg/build-service-rest/PCBioUnlock-RestUnlock-arm64.zip
+            pkg/build-service-rest/PCBioUnlock-PCBioUnlock-arm64.zip
 
   build-linux-x64:
     runs-on: ubuntu-24.04

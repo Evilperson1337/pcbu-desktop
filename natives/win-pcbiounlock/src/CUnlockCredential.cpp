@@ -123,6 +123,11 @@ void CUnlockCredential::SetServiceRequestId(const std::string &requestId) {
   _serviceRequestId = requestId;
 }
 
+// NEW
+void CUnlockCredential::SetServiceConsumeToken(const std::string &consumeToken) {
+  _serviceConsumeToken = consumeToken;
+}
+
 // LogonUI calls this in order to give us a callback in case we need to notify it of anything.
 HRESULT CUnlockCredential::Advise(_In_ ICredentialProviderCredentialEvents *pcpce) {
   if(_pCredProvCredentialEvents != nullptr) {
@@ -369,7 +374,7 @@ HRESULT CUnlockCredential::GetSerialization(_Out_ CREDENTIAL_PROVIDER_GET_SERIAL
   if(_unlockResult.state == UnlockState::SUCCESS) {
     if(!_serviceRequestId.empty() && _unlockResult.password.empty()) {
       auto serviceClient = CUnlockServiceClient();
-      auto servicePassword = serviceClient.ConsumeApprovedPassword(_serviceRequestId);
+      auto servicePassword = serviceClient.ConsumeApprovedPassword(_serviceRequestId, _serviceConsumeToken);
       if(servicePassword.has_value()) {
         _unlockResult.password = servicePassword.value();
       }

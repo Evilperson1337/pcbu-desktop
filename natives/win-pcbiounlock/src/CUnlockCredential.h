@@ -99,6 +99,7 @@ public:
   void SetUnlockData(const UnlockResult &result);
   void UpdateMessage(const std::string &message);
   void SetServiceRequestId(const std::string &requestId);
+  void SetServiceConsumeToken(const std::string &consumeToken);
 
 public:
   virtual ~CUnlockCredential();
@@ -121,4 +122,5 @@ public:
   UnlockResult _unlockResult{};
   bool _isSelected{};
   std::string _serviceRequestId{};
+  std::string _serviceConsumeToken{};
 };

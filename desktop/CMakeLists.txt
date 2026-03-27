@@ -164,6 +164,8 @@ if(WIN32)
     # NEW
     add_executable(pcbu_unlock_service
             service/src/main.cpp
+            service/src/LoopbackRestServer.h
+            service/src/LoopbackRestServer.cpp
             service/src/UnlockServiceApp.h
             service/src/UnlockServiceApp.cpp
             service/src/UnlockRequestManager.h

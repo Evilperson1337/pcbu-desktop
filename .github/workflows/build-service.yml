@@ -1,0 +1,97 @@
+name: Build Service Unlock
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+env:
+  QT_VERSION: 6.10.2
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Setup Windows x64 build environment
+        uses: ./.github/actions/setup-windows-build
+        with:
+          qt-version: "${{env.QT_VERSION}}"
+          arch: x64
+          qt-cache-prefix: "qt-x64-service"
+          vcpkg-cache-key: "vcpkg-x64-service"
+          github-token: ${{github.token}}
+
+      - name: Build service unlock x64 bundle
+        run: bash -c "cd pkg && chmod +x build-service-rest.sh && INCLUDE_SMOKE_DEPS=1 BUILD_COMPONENT=service ARCH=x64 QT_BASE_DIR=C:/Qt/${{env.QT_VERSION}} ./build-service-rest.sh"
+        env:
+          VCPKG_ROOT: ${{github.workspace}}/vcpkg
+
+      - name: Smoke test service unlock x64
+        uses: ./.github/actions/run-service-rest-smoke
+        with:
+          service-exe: pkg/build-service-rest/desktop/Release/pcbu_unlock_service.exe
+          unlockctl-exe: pkg/build-service-rest/desktop/Release/pcbu_unlockctl.exe
+          mode: pipe
+
+      - name: Verify service unlock x64 bundle
+        uses: ./.github/actions/verify-zip-contents
+        with:
+          zip: pkg/build-service-rest/PCBioUnlock-ServiceUnlock-x64.zip
+          destination: pkg/build-service-rest/verify-service-x64
+          required-files: |
+            pcbu_unlock_service.exe
+
+      - name: Upload x64
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pkg/build-service-rest/PCBioUnlock-ServiceUnlock-x64.zip
+
+  build-windows-arm64:
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Setup Windows arm64 build environment
+        uses: ./.github/actions/setup-windows-build
+        with:
+          qt-version: "${{env.QT_VERSION}}"
+          arch: arm64
+          qt-cache-prefix: "qt-arm64-service"
+          vcpkg-cache-key: "vcpkg-arm64-service"
+          github-token: ${{github.token}}
+
+      - name: Build service unlock arm64 bundle
+        run: bash -c "cd pkg && chmod +x build-service-rest.sh && rm -Rf ./build-service-rest/ && INCLUDE_SMOKE_DEPS=1 BUILD_COMPONENT=service ARCH=arm64 QT_BASE_DIR=C:/Qt/${{env.QT_VERSION}} ./build-service-rest.sh"
+        env:
+          VCPKG_ROOT: ${{github.workspace}}/vcpkg
+
+      - name: Smoke test service unlock arm64
+        uses: ./.github/actions/run-service-rest-smoke
+        with:
+          service-exe: pkg/build-service-rest/desktop/Release/pcbu_unlock_service.exe
+          unlockctl-exe: pkg/build-service-rest/desktop/Release/pcbu_unlockctl.exe
+          mode: pipe
+
+      - name: Verify service unlock arm64 bundle
+        uses: ./.github/actions/verify-zip-contents
+        with:
+          zip: pkg/build-service-rest/PCBioUnlock-ServiceUnlock-arm64.zip
+          destination: pkg/build-service-rest/verify-service-arm64
+          required-files: |
+            pcbu_unlock_service.exe
+
+      - name: Upload arm64
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pkg/build-service-rest/PCBioUnlock-ServiceUnlock-arm64.zip

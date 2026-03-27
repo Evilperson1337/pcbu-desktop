@@ -1,0 +1,83 @@
+name: Build Companion Unlock
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+env:
+  QT_VERSION: 6.10.2
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Setup Windows x64 build environment
+        uses: ./.github/actions/setup-windows-build
+        with:
+          qt-version: "${{env.QT_VERSION}}"
+          arch: x64
+          qt-cache-prefix: "qt-x64-companion"
+          vcpkg-cache-key: "vcpkg-x64-companion"
+          github-token: ${{github.token}}
+
+      - name: Build companion unlock x64 bundle
+        run: bash -c "cd pkg && chmod +x build-service-rest.sh && BUILD_COMPONENT=companion ARCH=x64 QT_BASE_DIR=C:/Qt/${{env.QT_VERSION}} ./build-service-rest.sh"
+        env:
+          VCPKG_ROOT: ${{github.workspace}}/vcpkg
+
+      - name: Verify companion unlock x64 bundle
+        uses: ./.github/actions/verify-zip-contents
+        with:
+          zip: pkg/build-service-rest/PCBioUnlock-PCBioUnlock-x64.zip
+          destination: pkg/build-service-rest/verify-companion-x64
+          required-files: |
+            win-pcbiounlock.dll
+
+      - name: Upload x64
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pkg/build-service-rest/PCBioUnlock-PCBioUnlock-x64.zip
+
+  build-windows-arm64:
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
+
+      - name: Setup Windows arm64 build environment
+        uses: ./.github/actions/setup-windows-build
+        with:
+          qt-version: "${{env.QT_VERSION}}"
+          arch: arm64
+          qt-cache-prefix: "qt-arm64-companion"
+          vcpkg-cache-key: "vcpkg-arm64-companion"
+          github-token: ${{github.token}}
+
+      - name: Build companion unlock arm64 bundle
+        run: bash -c "cd pkg && chmod +x build-service-rest.sh && rm -Rf ./build-service-rest/ && BUILD_COMPONENT=companion ARCH=arm64 QT_BASE_DIR=C:/Qt/${{env.QT_VERSION}} ./build-service-rest.sh"
+        env:
+          VCPKG_ROOT: ${{github.workspace}}/vcpkg
+
+      - name: Verify companion unlock arm64 bundle
+        uses: ./.github/actions/verify-zip-contents
+        with:
+          zip: pkg/build-service-rest/PCBioUnlock-PCBioUnlock-arm64.zip
+          destination: pkg/build-service-rest/verify-companion-arm64
+          required-files: |
+            win-pcbiounlock.dll
+
+      - name: Upload arm64
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            pkg/build-service-rest/PCBioUnlock-PCBioUnlock-arm64.zip
